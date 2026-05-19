@@ -4,60 +4,48 @@ const express = require("express");
 const router = express.Router(); //() creates a new router object; router=stores routes like GET, POST, DELETE, etc.
 
 //create using POST/ Creates a new book using the data in req.body.
-app.post('/books', async (req, res) => {
-
+router.post("/", async (req, res) => {
     try {
-        if (!req.body) {
-            return res.status(400).json({
-                error: "Request body is missing"
-            });
-        }
         const createdBook = await Book.create(req.body);
-
-        console.log('Book has successfully been created!');
-        console.log(req.body);
-        return res.redirect("/books");
+        return res.status(201).json(createdBook);
     } catch (error) {
-        console.error('Error Creating Book!');
-        return res.status(500).send("Failed to create book");
+        console.error("Error creating book:", error);
+        return res.status(500).json({ error: "Failed to create book" });
     }
-
 });
 //Read All: GET / - Retrieves all books from the database.
-app.get("/books", async (req, res) => {
+router.get("/", async (req, res) => {
     try {
-        const allBooks = await Book.find(req.body)
-        res.render("index", {
-            books: allBooks
-        });
+        const books = await Book.find();
+        return res.status(200).json(books);
     } catch (error) {
-        console.log(error);
-        res.status(500).send(error)
+        console.error("Error fetching books:", error);
+        return res.status(500).json({ error: "Failed to fetch books" });
     }
 });
 
 
 //Read One: GET /:id - Retrieves a single book by its _id.
 
-app.get("/books/:id", async (req, res) => {
+router.get("/:id", async (req, res) => {
     try {
-        const foundBook = await Book.findById(req.params.id);
-        res.render("show", {
-            book: foundBook
-        });
+        const book = await Book.findById(req.params.id);
+
+        if (!book) {
+            return res.status(404).json({ error: "Book not found" });
+        }
+
+        return res.status(200).json(book);
     } catch (error) {
         console.error("Error fetching book:", error);
-        return res.status(500).send("Failed to fetch book");
+        return res.status(500).json({ error: "Failed to fetch book" });
     }
-
 });
 
 //Update: PUT /:id - Updates a book by its _id using the data in req.body.
 
-app.put("/books/:id", async (req, res) => {
-
+router.put("/:id", async (req, res) => {
     try {
-
         const updatedBook = await Book.findByIdAndUpdate(
             req.params.id,
             req.body,
@@ -65,17 +53,33 @@ app.put("/books/:id", async (req, res) => {
         );
 
         if (!updatedBook) {
-            return res.status(404).send("Book not found");
+            return res.status(404).json({ error: "Book not found" });
         }
 
-        res.json(updatedBook);
-
+        return res.status(200).json(updatedBook);
     } catch (error) {
-
         console.error("Error updating book:", error);
-
-        return res.status(500).send("Failed to update book");
+        return res.status(500).json({ error: "Failed to update book" });
     }
-
 });
 
+
+//Delete: DELETE /:id - Deletes a book by its _id.
+
+router.delete("/:id", async (req, res) => {
+    try {
+        const deletedBook = await Book.findByIdAndDelete(req.params.id);
+
+        if (!deletedBook) {
+            return res.status(404).json({ error: "Book not found" });
+            //using res.json() to send JSON, and res.status() to set the status code.”
+        }
+
+        return res.status(200).json({ message: "Book deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting book:", error);
+        return res.status(500).json({ error: "Failed to delete book" });
+    }
+});
+
+module.exports = bookRoutes;
