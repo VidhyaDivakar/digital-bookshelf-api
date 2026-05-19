@@ -2,7 +2,7 @@
 const express = require("express");
 
 const router = express.Router(); //() creates a new router object; router=stores routes like GET, POST, DELETE, etc.
-
+const Book = require("../models/book");
 //create using POST/ Creates a new book using the data in req.body.
 router.post("/", async (req, res) => {
     try {
@@ -82,4 +82,4 @@ router.delete("/:id", async (req, res) => {
     }
 });
 
-module.exports = bookRoutes;
+module.exports = router;
